@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Player</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@vime/core@^5/themes/default.css"
+    />
+    <style>
+      body,
+      html {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #container {
+        width: 100%;
+        max-width: 960px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <vm-player autoplay>
+        <vm-hls version="latest">
+          <source data-src="" type="application/x-mpegURL" />
+        </vm-hls>
+        <vm-default-ui></vm-default-ui>
+      </vm-player>
+    </div>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@vime/core@^5/dist/vime/vime.esm.js"
+    ></script>
+    <script>
+      window.player = document.querySelector("vm-player");
+
+      const container = document.getElementById("container");
+      const searchParams = new URLSearchParams(window.location.search);
+      const id = searchParams.get("id");
+
+      if (id === null) {
+        container.innerHTML = "";
+      } else {
+        try {
+          fetch(
+            "https://consumet-api-for-shinigami-8gdkfcvnx-tanwarjigyasu.vercel.app/meta/anilist/watch/" +
+              id
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              container
+                .querySelector("vm-player vm-hls source")
+                .setAttribute(
+                  "data-src",
+                  data.sources.find((obj) => obj.quality === "default").url
+                );
+            });
+        } catch (err) {
+          container.innerHTML = err;
+        }
+      }
+    </script>
+  </body>
+</html>
