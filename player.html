@@ -35,15 +35,34 @@
     />
     <style>
       vm-player {
-        --vm-spinner-width: 0;
-        --vm-spinner-height: 0;
-        --vm-spinner-thickness: 0;
-        --vm-spinner-fill-color: transparent;
-        --vm-spinner-track-color: transparent;
+        --vm-settings-padding: 8px 0;
+        --vm-slider-thumb-width: 15px;
+        --vm-slider-thumb-height: 15px;
+        --vm-control-border-radius: 5px;
+        --vm-tooltip-border-radius: 5px;
+        --vm-player-border-radius: 10px;
+        --vm-settings-border-radius: 5px;
+        --vm-menu-item-padding: 8px 15px;
+        --vm-captions-cue-border-radius: 5px;
+        --vm-menu-bg: #232323;
+        --vm-menu-color: #f5f5f5;
+        --vm-time-color: #f5f5f5;
+        --vm-tooltip-bg: #232323;
+        --vm-tooltip-color: #f5f5f5;
+        --vm-slider-thumb-bg: #f5f5f5;
+        --vm-slider-value-color: #f5f5f5;
+        --vm-spinner-fill-color: #f5f5f5;
+        --vm-captions-text-color: #f5f5f5;
+        --vm-control-focus-color: #f5f5f5;
+        --vm-captions-cue-bg-color: #232323;
+        --vm-spinner-track-color: #f5f5f560;
         --vm-loading-screen-dot-color: transparent;
+        --vm-player-font-family: "Poppins", sans-serif;
+      }
 
-        --vm-loading-screen-dot-size: 0;
-        --vm-loading-screen-dot-color: transparent;
+      vm-player[mobile],
+      vm-player[touch] {
+        --vm-control-border-radius: 5px;
       }
 
       *,
@@ -209,42 +228,104 @@
       src="https://cdn.jsdelivr.net/npm/@vime/core@^5/dist/vime/vime.esm.js"
     ></script>
     <script>
+      const PLAYER_CONFIGS = {
+        APIS: [
+          "https://177462-274145-304307-475408.vercel.app/meta/anilist/watch/",
+          "https://177462-274145-304307-475408.vercel.app/meta/tmdb/watch/",
+          ""
+        ],
+        TYPES: ["ANIME", "MOVIE", ""],
+      };
       window.player = document.querySelector("vm-player");
 
       const container = document.getElementById("container");
       const searchParams = new URLSearchParams(window.location.search);
       const id = searchParams.get("id");
-      const poster =
-        searchParams.get("poster") ||
-        "https://cdn.jsdelivr.net/gh/tanwarjigyasu/File-Hosting/background.webp";
+      const poster = searchParams.get("poster");
+      const episodeID = searchParams.get("episodeID");
+
+      const type = searchParams.get("type") || PLAYER_CONFIGS.TYPES[0];
+
+      function setUpPlayer(url, subtitles) {
+        const sub = [];
+        container.innerHTML =
+          '<vm-player style="padding: 20px; width: calc(100vw + 20px); max-width: 980px"><vm-hls version="latest" poster="' +
+          poster +
+          '"><source data-src="' +
+          url +
+          '" type="application/x-mpegURL" />' +
+          sub +
+          '</vm-hls><vm-default-ui><vm-loading-screen><div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></vm-loading-screen></vm-default-ui></vm-player>';
+      }
 
       if (id === null) {
-        container.innerHTML =
-          "<h2>No ID Parameter found. Please specify the parameter in the url.</h2>";
+        const url = searchParams.get("url");
+        if (url === null) {
+          container.innerHTML =
+            "<h2>No ID or URL Parameter found. Please specify the parameter in the url.</h2>";
+        } else {
+          setUpPlayer(url);
+        }
       } else {
         try {
-          fetch(
-            "https://consumet-api-for-shinigami-8gdkfcvnx-tanwarjigyasu.vercel.app/meta/anilist/watch/" +
-              id
-          )
-            .then((res) => res.json())
-            .then((data) => {
-              if (
-                data.sources !== undefined &&
-                data.sources !== null &&
-                data.sources.length > 0
-              ) {
+          switch (type) {
+            case PLAYER_CONFIGS.TYPES[0]:
+              api = PLAYER_CONFIGS.APIS[0];
+              fetch(api + id)
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.sources === undefined) {
+                    container.innerHTML =
+                      "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                  } else {
+                    setUpPlayer(
+                      data.sources.find((obj) => obj.quality === "default").url,
+                      []
+                    );
+                  }
+                });
+              break;
+            case PLAYER_CONFIGS.TYPES[1]:
+              if (episodeID === null) {
                 container.innerHTML =
-                  '<vm-player style="padding: 20px; width: calc(100vw + 20px); max-width: 980px"><vm-hls version="latest" poster="' +
-                  poster +
-                  '"><source data-src="' +
-                  data.sources.find((obj) => obj.quality === "default").url +
-                  '" type="application/x-mpegURL" /></vm-hls><vm-default-ui><vm-dbl-click-fullscreen useOnMobile="true"></vm-dbl-click-fullscreen><vm-default-controls active-duration="2000"></vm-default-controls><vm-loading-screen hideDots="true"><div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></vm-loading-screen></vm-default-ui></vm-player>';
+                  "<h2>No EpisodeID Parameter found. Please specify the parameter in the url.</h2>";
               } else {
-                container.innerHTML =
-                  "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                api = PLAYER_CONFIGS.APIS[1];
+                fetch(api + id + "?id=" + episodeID)
+                  .then((res) => res.json())
+                  .then((data) => {
+                    if (data.sources === undefined) {
+                      container.innerHTML =
+                        "<h2>Invalid ID/EpisodeID Parameter. Please Try again with a proper ID/EpisodeID.</h2>";
+                    } else {
+                      setUpPlayer(
+                        data.sources.find((obj) => obj.quality === "auto").url,
+                        data.subtitles === undefined ? null : data.subtitles
+                      );
+                    }
+                  });
               }
-            });
+              break;
+            case PLAYER_CONFIGS.TYPES[2]:
+              api = PLAYER_CONFIGS.APIS[2];
+              break;
+            default:
+              api = PLAYER_CONFIGS.APIS[0];
+              fetch(api + id)
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.sources === undefined) {
+                    container.innerHTML =
+                      "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                  } else {
+                    setUpPlayer(
+                      data.sources.find((obj) => obj.quality === "default").url,
+                      []
+                    );
+                  }
+                });
+              break;
+          }
         } catch (err) {
           container.innerHTML = "<h2>" + err + "</h2>";
         }
