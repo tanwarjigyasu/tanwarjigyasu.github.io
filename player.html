@@ -232,7 +232,7 @@
         APIS: [
           "https://177462-274145-304307-475408.vercel.app/meta/anilist/watch/",
           "https://177462-274145-304307-475408.vercel.app/meta/tmdb/watch/",
-          ""
+          "",
         ],
         TYPES: ["ANIME", "MOVIE", ""],
       };
@@ -267,67 +267,42 @@
           setUpPlayer(url);
         }
       } else {
-        try {
-          switch (type) {
-            case PLAYER_CONFIGS.TYPES[0]:
-              api = PLAYER_CONFIGS.APIS[0];
-              fetch(api + id)
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.sources === undefined) {
-                    container.innerHTML =
-                      "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
-                  } else {
-                    setUpPlayer(
-                      data.sources.find((obj) => obj.quality === "default").url,
-                      []
-                    );
-                  }
-                });
-              break;
-            case PLAYER_CONFIGS.TYPES[1]:
-              if (episodeID === null) {
-                container.innerHTML =
-                  "<h2>No EpisodeID Parameter found. Please specify the parameter in the url.</h2>";
-              } else {
-                api = PLAYER_CONFIGS.APIS[1];
-                fetch(api + id + "?id=" + episodeID)
-                  .then((res) => res.json())
-                  .then((data) => {
-                    if (data.sources === undefined) {
-                      container.innerHTML =
-                        "<h2>Invalid ID/EpisodeID Parameter. Please Try again with a proper ID/EpisodeID.</h2>";
-                    } else {
-                      setUpPlayer(
-                        data.sources.find((obj) => obj.quality === "auto").url,
-                        data.subtitles === undefined ? null : data.subtitles
-                      );
-                    }
-                  });
-              }
-              break;
-            case PLAYER_CONFIGS.TYPES[2]:
-              api = PLAYER_CONFIGS.APIS[2];
-              break;
-            default:
-              api = PLAYER_CONFIGS.APIS[0];
-              fetch(api + id)
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.sources === undefined) {
-                    container.innerHTML =
-                      "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
-                  } else {
-                    setUpPlayer(
-                      data.sources.find((obj) => obj.quality === "default").url,
-                      []
-                    );
-                  }
-                });
-              break;
+        switch (type) {
+          case PLAYER_CONFIGS.TYPES[0]:
+            fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
+            break;
+          case PLAYER_CONFIGS.TYPES[1]:
+            if (episodeID === null) {
+              container.innerHTML =
+                "<h2>No EpisodeID Parameter found. Please specify the parameter in the url.</h2>";
+            } else {
+              fetchAPI(PLAYER_CONFIGS.APIS[1] + id + "?id=" + episodeID);
+            }
+          case PLAYER_CONFIGS.TYPES[2]:
+
+          default:
+            fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
+            break;
+        }
+
+        function fetchAPI(api) {
+          try {
+            fetch(api)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.sources === undefined) {
+                  container.innerHTML =
+                    "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                } else {
+                  setUpPlayer(
+                    data.sources.find((obj) => obj.quality === "default" || obj.quality === "auto").url,
+                    data.subtitles === undefined ? [] : data.subtitles
+                  );
+                }
+              });
+          } catch (err) {
+            container.innerHTML = "<h2>" + err + "</h2>";
           }
-        } catch (err) {
-          container.innerHTML = "<h2>" + err + "</h2>";
         }
       }
     </script>
