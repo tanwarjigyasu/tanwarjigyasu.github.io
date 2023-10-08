@@ -29,31 +29,14 @@
     * * {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-      user-select: none;
       outline: none;
       border: none;
-      color: #f5f5f5;
       font-weight: 500;
+      color: #f5f5f5;
+      user-select: none;
+      box-sizing: border-box;
       font-family: "Poppins", sans-serif;
       -webkit-tap-highlight-color: transparent;
-    }
-
-    *::-webkit-scrollbar {
-      height: 5px;
-      width: 5px;
-      background-color: transparent;
-    }
-
-    *::-webkit-thumb {
-      height: 20vh;
-      width: 20vw;
-      border-radius: 50px;
-      background-color: #2196f3;
-    }
-
-    *::-webkit-thumb:hover {
-      background-color: #f03d30;
     }
 
     html {
@@ -61,14 +44,173 @@
     }
 
     body {
-      padding: 40px 20px 60px 20px;
-      min-height: 100vh;
       min-width: 100vw;
+      min-height: 100vh;
       background-color: #232323;
+      padding: 40px 20px 60px 20px;
+    }
+
+    body::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+      background-color: transparent;
+    }
+
+    body::-webkit-thumb {
+      width: 20vw;
+      height: 20vh;
+      border-radius: 50px;
+      background-color: #2196f3;
+    }
+
+    body::-webkit-thumb:hover {
+      background-color: #f03d30;
+    }
+
+    img {
+      width: 15vw;
+      height: 50vh;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    #loader {
+      top: 50%;
+      left: 50%;
+      opacity: 1;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: all 0.5s ease-in-out;
+    }
+
+    #container {
+      opacity: 0;
+      transition: all 0.5s ease-in-out;
+    }
+
+    /* Loader */
+
+    .lds-roller {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .lds-roller div {
+      transform-origin: 40px 40px;
+      animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    .lds-roller div:after {
+      width: 7px;
+      height: 7px;
+      content: " ";
+      display: block;
+      position: absolute;
+      border-radius: 50%;
+      margin: -4px 0 0 -4px;
+      background: #f5f5f5;
+    }
+
+    .lds-roller div:nth-child(1) {
+      animation-delay: -0.036s;
+    }
+
+    .lds-roller div:nth-child(1):after {
+      top: 63px;
+      left: 63px;
+    }
+
+    .lds-roller div:nth-child(2) {
+      animation-delay: -0.072s;
+    }
+
+    .lds-roller div:nth-child(2):after {
+      top: 68px;
+      left: 56px;
+    }
+    .lds-roller div:nth-child(3) {
+      animation-delay: -0.108s;
+    }
+
+    .lds-roller div:nth-child(3):after {
+      top: 71px;
+      left: 48px;
+    }
+
+    .lds-roller div:nth-child(4) {
+      animation-delay: -0.144s;
+    }
+
+    .lds-roller div:nth-child(4):after {
+      top: 72px;
+      left: 40px;
+    }
+
+    .lds-roller div:nth-child(5) {
+      animation-delay: -0.18s;
+    }
+
+    .lds-roller div:nth-child(5):after {
+      top: 71px;
+      left: 32px;
+    }
+
+    .lds-roller div:nth-child(6) {
+      animation-delay: -0.216s;
+    }
+
+    .lds-roller div:nth-child(6):after {
+      top: 68px;
+      left: 24px;
+    }
+
+    .lds-roller div:nth-child(7) {
+      animation-delay: -0.252s;
+    }
+
+    .lds-roller div:nth-child(7):after {
+      top: 63px;
+      left: 17px;
+    }
+
+    .lds-roller div:nth-child(8) {
+      animation-delay: -0.288s;
+    }
+
+    .lds-roller div:nth-child(8):after {
+      top: 56px;
+      left: 12px;
+    }
+
+    @keyframes lds-roller {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
   <body>
+    <div id="loader">
+      <div class="lds-roller">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
     <div id="container">
+      <p align="center"><img src="" alt="Cover" /></p>
+      <br /><br />
       <h2 align="center"></h2>
       <h2 align="center"></h2>
       <br /><br />
@@ -80,34 +222,50 @@
         APIS: [
           "https://177462-274145-304307-475408.vercel.app/light-novels/readlightnovels/",
         ],
-        TYPES: ["NOVEL"],
+        TYPES: ["NOVEL", "BOOK"],
       };
 
+      const loader = document.getElementById("loader");
       const container = document.getElementById("container");
       const searchParams = new URLSearchParams(window.location.search);
       const id = searchParams.get("id");
-      const type = searchParams.get("type");
+      const type = searchParams.get("type") || CONFIGS.TYPES[0];
       const chapter = searchParams.get("chapter");
 
-      function fetchNovel(api) {
+      function hideLoader() {
+        loader.style.opacity = "0";
+        container.style.opacity = "1";
+      }
+
+      function fetchContent(api) {
         try {
           fetch(api)
             .then((resp) => resp.json())
             .then((data) => {
               if (data.chapters === undefined) {
                 container.innerHTML =
-                  "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                  "Invalid ID Parameter. Please Try again with a proper ID";
+                hideLoader();
               } else {
+                if (data.image !== undefined) {
+                  container.querySelector("p img").src = data.image;
+                } else {
+                  container.querySelector("p img").remove();
+                  container.querySelectorAll("br")[0].remove();
+                  container.querySelectorAll("br")[1].remove();
+                }
                 fetchChapter(
-                  CONFIGS.APIS[0] + "read?chapterId=",
+                  api.replace("info?id=" + id, "read?chapterId="),
                   data.chapters.find(
-                    (chapterObj) => chapterObj.id.split("-").pop() === chapter
+                    (chapterObj) =>
+                      chapterObj.id.split("/")[1].replace(/[^0-9]/g, "") ===
+                      chapter
                   ).id
                 );
               }
             });
         } catch (err) {
-          container.innerHTML = "<h2>" + err + "</h2>";
+          container.querySelectorAll("h2")[0].innerText = err;
         }
       }
 
@@ -115,34 +273,44 @@
         try {
           fetch(api + chapterId)
             .then((resp) => resp.json())
-            .then((data) =>
-              setUpNovel(data.novelTitle, data.chapterTitle, data.text)
-            );
+            .then((data) => {
+              switch (type) {
+                case CONFIGS.TYPES[0]:
+                  setUpNovel(data.novelTitle, data.chapterTitle, data.text);
+                  break;
+                default:
+                  setUpNovel(data.novelTitle, data.chapterTitle, data.text);
+                  break;
+              }
+            });
         } catch (err) {
-          container.innerHTML = "<h2>" + err + "</h2>";
+          container.querySelectorAll("h2")[0].innerText = err;
         }
       }
 
-      function setUpNovel(novel, chapter, text) {
-        container.querySelectorAll("h2")[0].innerText = novel;
+      function setUpNovel(title, chapter, text) {
+        container.querySelectorAll("h2")[0].innerText = title;
         container.querySelectorAll("h2")[1].innerText = chapter;
-        container.querySelector("p").innerText = text;
+        container.querySelectorAll("p")[1].innerText = text;
+        hideLoader();
       }
 
       if (id === null) {
-        container.innerHTML =
-          "<h2>No ID Parameter found. Please specify the parameter in the url.</h2>";
+        container.querySelectorAll("h2")[0].innerText =
+          "No ID Parameter found. Please specify the parameter in the URL";
+        hideLoader();
       } else {
         if (chapter === null) {
-          container.innerHTML =
-            "<h2>No Chapter Parameter found. Please specify the parameter in the url.</h2>";
+          container.querySelectorAll("h2")[0].innerText =
+            "No Chapter Parameter found. Please specify the parameter in the URL";
+          hideLoader();
         } else {
           switch (type) {
             case CONFIGS.TYPES[0]:
-              fetchNovel(CONFIGS.APIS[0] + "info?id=" + id);
+              fetchContent(CONFIGS.APIS[0] + "info?id=" + id);
               break;
             default:
-              fetchNovel(CONFIGS.APIS[0] + "info?id=" + id);
+              fetchContent(CONFIGS.APIS[0] + "info?id=" + id);
               break;
           }
         }
