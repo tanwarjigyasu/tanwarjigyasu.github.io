@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="IE=7" />
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="https://cdn.jsdelivr.net/gh/tanwarjigyasu/tanwarjigyasu.github.io/favicon.ico"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://cdn.jsdelivr.net/gh/tanwarjigyasu/tanwarjigyasu.github.io/android-chrome-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://cdn.jsdelivr.net/gh/tanwarjigyasu/tanwarjigyasu.github.io/apple-touch-icon.png"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reader</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <style>
+    *,
+    * * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      outline: none;
+      border: none;
+      color: #f5f5f5;
+      font-weight: 500;
+      font-family: "Poppins", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    *::-webkit-scrollbar {
+      height: 5px;
+      width: 5px;
+      background-color: transparent;
+    }
+
+    *::-webkit-thumb {
+      height: 20vh;
+      width: 20vw;
+      border-radius: 50px;
+      background-color: #2196f3;
+    }
+
+    *::-webkit-thumb:hover {
+      background-color: #f03d30;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      padding: 40px 20px 60px 20px;
+      min-height: 100vh;
+      min-width: 100vw;
+      background-color: #232323;
+    }
+  </style>
+  <body>
+    <div id="container">
+      <h2 align="center"></h2>
+      <h2 align="center"></h2>
+      <br /><br />
+      <p></p>
+    </div>
+
+    <script>
+      const CONFIGS = {
+        APIS: [
+          "https://177462-274145-304307-475408.vercel.app/light-novels/readlightnovels/",
+        ],
+        TYPES: ["NOVEL"],
+      };
+
+      const container = document.getElementById("container");
+      const searchParams = new URLSearchParams(window.location.search);
+      const id = searchParams.get("id");
+      const type = searchParams.get("type");
+      const chapter = searchParams.get("chapter");
+
+      function fetchNovel(api) {
+        try {
+          fetch(api)
+            .then((resp) => resp.json())
+            .then((data) => {
+              if (data.chapters === undefined) {
+                container.innerHTML =
+                  "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+              } else {
+                fetchChapter(
+                  CONFIGS.APIS[0] + "read?chapterId=",
+                  data.chapters.find(
+                    (chapterObj) => chapterObj.id.split("-").pop() === chapter
+                  ).id
+                );
+              }
+            });
+        } catch (err) {
+          container.innerHTML = "<h2>" + err + "</h2>";
+        }
+      }
+
+      function fetchChapter(api, chapterId) {
+        try {
+          fetch(api + chapterId)
+            .then((resp) => resp.json())
+            .then((data) =>
+              setUpNovel(data.novelTitle, data.chapterTitle, data.text)
+            );
+        } catch (err) {
+          container.innerHTML = "<h2>" + err + "</h2>";
+        }
+      }
+
+      function setUpNovel(novel, chapter, text) {
+        container.querySelectorAll("h2")[0].innerText = novel;
+        container.querySelectorAll("h2")[1].innerText = chapter;
+        container.querySelector("p").innerText = text;
+      }
+
+      if (id === null) {
+        container.innerHTML =
+          "<h2>No ID Parameter found. Please specify the parameter in the url.</h2>";
+      } else {
+        if (chapter === null) {
+          container.innerHTML =
+            "<h2>No Chapter Parameter found. Please specify the parameter in the url.</h2>";
+        } else {
+          switch (type) {
+            case CONFIGS.TYPES[0]:
+              fetchNovel(CONFIGS.APIS[0] + "info?id=" + id);
+              break;
+            default:
+              fetchNovel(CONFIGS.APIS[0] + "info?id=" + id);
+              break;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
