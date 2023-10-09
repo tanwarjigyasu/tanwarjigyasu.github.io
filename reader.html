@@ -68,26 +68,29 @@
     }
 
     img {
-      width: 60vw;
       height: 50vh;
-      max-width: 720px;
+      width: calc(100% - 20px);
+      max-width: 300px;
       object-fit: cover;
       border-radius: 10px;
       box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
     }
 
     #loader {
-      top: 50%;
-      left: 50%;
       opacity: 1;
-      position: absolute;
-      transform: translate(-50%, -50%);
       transition: all 0.5s ease-in-out;
     }
 
     #container {
       opacity: 0;
       transition: all 0.5s ease-in-out;
+    }
+
+    .center {
+      top: 50%;
+      left: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
     }
 
     /* Loader */
@@ -197,7 +200,7 @@
     }
   </style>
   <body>
-    <div id="loader">
+    <div id="loader" class="center">
       <div class="lds-roller">
         <div></div>
         <div></div>
@@ -244,8 +247,8 @@
             .then((resp) => resp.json())
             .then((data) => {
               if (data.chapters === undefined) {
-                container.innerHTML =
-                  "Invalid ID Parameter. Please Try again with a proper ID";
+                container.classList.add("center");
+                container.innerText = `<h2 align="center">Invalid ID Parameter. Please Try again with a proper ID</h2>`;
                 hideLoader();
               } else {
                 if (data.image !== undefined) {
@@ -266,7 +269,8 @@
               }
             });
         } catch (err) {
-          container.querySelectorAll("h2")[0].innerText = err;
+          container.classList.add("center");
+          container.innerText = `<h2 align="center">${err}`;
         }
       }
 
@@ -285,7 +289,8 @@
               }
             });
         } catch (err) {
-          container.querySelectorAll("h2")[0].innerText = err;
+          container.classList.add("center");
+          container.innerText = `<h2 align="center">${err}`;
         }
       }
 
@@ -297,13 +302,13 @@
       }
 
       if (id === null) {
-        container.querySelectorAll("h2")[0].innerText =
-          "No ID Parameter found. Please specify the parameter in the URL";
+        container.classList.add("center");
+        container.innerHTML = `<h2 align="center">No ID Parameter found. Please specify the parameter in the URL</h2>`;
         hideLoader();
       } else {
         if (chapter === null) {
-          container.querySelectorAll("h2")[0].innerText =
-            "No Chapter Parameter found. Please specify the parameter in the URL";
+          container.classList.add("center");
+          container.innerText = `<h2 align="center">No Chapter Parameter found. Please specify the parameter in the URL</h2>`;
           hideLoader();
         } else {
           switch (type) {
