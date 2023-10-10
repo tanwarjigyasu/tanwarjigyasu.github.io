@@ -45,6 +45,7 @@
         --vm-menu-item-padding: 8px 15px;
         --vm-captions-cue-border-radius: 5px;
         --vm-menu-bg: #232323;
+        --vm-scrim-bg: #232323;
         --vm-menu-color: #f5f5f5;
         --vm-time-color: #f5f5f5;
         --vm-tooltip-bg: #232323;
@@ -65,38 +66,6 @@
         --vm-control-border-radius: 5px;
       }
 
-      *,
-      * * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        user-select: none;
-        outline: none;
-        border: none;
-        color: #f5f5f5;
-        text-align: center;
-        font-weight: 500;
-        font-family: "Poppins", sans-serif;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      *::-webkit-scrollbar {
-        height: 5px;
-        width: 5px;
-        background-color: transparent;
-      }
-
-      *::-webkit-thumb {
-        height: 20vh;
-        width: 20vw;
-        border-radius: 50px;
-        background-color: #2196f3;
-      }
-
-      *::-webkit-thumb:hover {
-        background-color: #f03d30;
-      }
-
       html {
         scroll-behavior: smooth;
       }
@@ -104,16 +73,36 @@
       body {
         min-height: 100vh;
         min-width: 100vw;
+        overflow: hidden;
         background-color: #232323;
       }
 
+      h2 {
+        font-weight: 500;
+        color: #f5f5f5;
+        user-select: none;
+        text-align: center;
+        font-family: "Poppins", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #loader {
+        opacity: 1;
+        transition: all 0.5s ease-in-out;
+      }
+
       #container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        min-height: 100vh;
-        min-width: 100vw;
+        opacity: 0;
+        width: 100vw;
+        max-width: 980px;
+        transition: all 0.5s ease-in-out;
+      }
+
+      .center {
+        top: 50%;
+        left: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
       }
 
       .lds-roller {
@@ -222,7 +211,19 @@
     </style>
   </head>
   <body>
-    <div id="container"></div>
+    <div id="loader" class="center">
+      <div class="lds-roller">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div id="container" class="center"></div>
     <script
       type="module"
       src="https://cdn.jsdelivr.net/npm/@vime/core@^5/dist/vime/vime.esm.js"
@@ -238,6 +239,7 @@
       };
       window.player = document.querySelector("vm-player");
 
+      const loader = document.getElementById("loader");
       const container = document.getElementById("container");
       const searchParams = new URLSearchParams(window.location.search);
       const id = searchParams.get("id");
@@ -246,65 +248,80 @@
 
       const type = searchParams.get("type") || PLAYER_CONFIGS.TYPES[0];
 
-      function setUpPlayer(url, subtitles) {
+      const hideLoader = () => {
+        loader.style.opacity = "0";
+        container.style.opacity = "1";
+      };
+
+      const setUpPlayer = (url, subtitles) => {
         const sub = [];
-        container.innerHTML =
-          '<vm-player style="padding: 20px; width: calc(100vw + 20px); max-width: 980px"><vm-hls version="latest" poster="' +
-          poster +
-          '"><source data-src="' +
-          url +
-          '" type="application/x-mpegURL" />' +
-          sub +
-          '</vm-hls><vm-default-ui><vm-loading-screen><div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></vm-loading-screen></vm-default-ui></vm-player>';
-      }
+        subtitles.forEach((subtitle) => {
+          subtitle.lang === "English"
+            ? sub.push(
+                `<track default kind="subtitles" src="${subtitle.url}" label="${subtitle.lang}" />`
+              )
+            : sub.push(
+                `<track kind="subtitles" src="${subtitle.url}" label="${subtitle.lang}" />`
+              );
+        });
+        container.innerHTML = `<vm-player><vm-hls version="latest" poster="${poster}"><source data-src="${url}" type="application/x-mpegURL" />${sub}</vm-hls><vm-default-ui><vm-scrim gradient="up"></vm-scrim><vm-dbl-click-fullscreen useOnMobile="true"></vm-dbl-click-fullscreen><vm-loading-screen><div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></vm-loading-screen></vm-default-ui></vm-player>`;
+        hideLoader();
+      };
 
-      if (id === null) {
-        const url = searchParams.get("url");
-        if (url === null) {
-          container.innerHTML =
-            "<h2>No ID or URL Parameter found. Please specify the parameter in the url.</h2>";
+      const fetchAPI = (api) => {
+        try {
+          fetch(api)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.sources === undefined) {
+                container.innerHTML =
+                  "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
+                hideLoader();
+              } else {
+                setUpPlayer(
+                  data.sources.find(
+                    (obj) => obj.quality === "default" || obj.quality === "auto"
+                  ).url,
+                  data.subtitles === undefined ? [] : data.subtitles
+                );
+              }
+            });
+        } catch (err) {
+          container.innerHTML = "<h2>" + err + "</h2>";
+        }
+      };
+
+      window.onload = () => {
+        if (id === null) {
+          const url = searchParams.get("url");
+          if (url === null) {
+            container.innerHTML =
+              "<h2>No ID or URL Parameter found. Please specify the parameter in the url.</h2>";
+            hideLoader();
+          } else {
+            setUpPlayer(url);
+          }
         } else {
-          setUpPlayer(url);
-        }
-      } else {
-        switch (type) {
-          case PLAYER_CONFIGS.TYPES[0]:
-            fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
-            break;
-          case PLAYER_CONFIGS.TYPES[1]:
-            if (episodeID === null) {
-              container.innerHTML =
-                "<h2>No EpisodeID Parameter found. Please specify the parameter in the url.</h2>";
-            } else {
-              fetchAPI(PLAYER_CONFIGS.APIS[1] + id + "?id=" + episodeID);
-            }
-          case PLAYER_CONFIGS.TYPES[2]:
-
-          default:
-            fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
-            break;
-        }
-
-        function fetchAPI(api) {
-          try {
-            fetch(api)
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.sources === undefined) {
-                  container.innerHTML =
-                    "<h2>Invalid ID Parameter. Please Try again with a proper ID.</h2>";
-                } else {
-                  setUpPlayer(
-                    data.sources.find((obj) => obj.quality === "default" || obj.quality === "auto").url,
-                    data.subtitles === undefined ? [] : data.subtitles
-                  );
-                }
-              });
-          } catch (err) {
-            container.innerHTML = "<h2>" + err + "</h2>";
+          switch (type) {
+            case PLAYER_CONFIGS.TYPES[0]:
+              fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
+              break;
+            case PLAYER_CONFIGS.TYPES[1]:
+              if (episodeID === null) {
+                container.innerHTML =
+                  "<h2>No EpisodeID Parameter found. Please specify the parameter in the url.</h2>";
+                hideLoader();
+              } else {
+                fetchAPI(PLAYER_CONFIGS.APIS[1] + id + "?id=" + episodeID);
+              }
+            case PLAYER_CONFIGS.TYPES[2]:
+              break;
+            default:
+              fetchAPI(PLAYER_CONFIGS.APIS[0] + id);
+              break;
           }
         }
-      }
+      };
     </script>
   </body>
 </html>
