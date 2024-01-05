@@ -47,9 +47,38 @@
         color: #9299a1;
         margin-bottom: 20px;
       }
-      #title {
+      #title,
+      #token,
+      .blue {
         color: #3cb0ed;
         font-weight: bold;
+      }
+      .copy-button {
+        background-color: #3cb0ed;
+        color: #edf1f5;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.3s ease;
+        margin-top: 20px;
+        width: fit-content;
+        margin: 20px auto;
+      }
+      .copy-button:hover {
+        background-color: #218ac8;
+      }
+      .copy-button img {
+        width: 20px;
+        height: 20px;
+        margin-right: 7px;
+      }
+      a {
+        text-decoration: none;
       }
     </style>
   </head>
@@ -59,28 +88,60 @@
         <img src="https://anilist.co/img/icons/icon.svg" alt="AniList Logo" />
       </div>
       <h1>Authentication Successful!</h1>
-      <p>You've successfully authenticated with <span id="title"></span>.</p>
+      <p>
+        You've successfully authenticated with
+        <a href="https://telegram.org"><span id="title"></span></a>.
+      </p>
       <p id="description"></p>
-      <p>You can close this page now.</p>
+      <p id="token"></p>
+      <button class="copy-button" onclick="copyToken()">
+        <img
+          src="https://img.icons8.com/material-outlined/24/ffffff/copy--v1.png"
+          alt="Copy Icon"
+        />
+        Copy Token
+      </button>
+      <p id="extra"></p>
     </div>
 
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const type = urlParams.get("type");
+      const token = urlParams.get("token");
       const titleElement = document.getElementById("title");
       const descriptionElement = document.getElementById("description");
+      const tokenElement = document.getElementById("token");
+      const extraElement = document.getElementById("extra");
       if (type === "APP") {
         titleElement.textContent = "AniList Unofficial";
         descriptionElement.textContent =
           "Congratulations on successfully authenticating with the Unofficial AniList App! 🎉 Dive into a world of endless anime and manga exploration. Discover, track, and indulge in your favorite series with ease. Welcome to a personalized AniList experience tailored just for you! 🌟";
+        extraElement.textContent = "You can close this page now and enjoy.";
       } else if (type === "BOT") {
         titleElement.textContent = "AniList Notifs";
         descriptionElement.textContent =
           "Congratulations! 🎉 You've successfully connected to AniList through our bot. Get ready to receive notifications about your favorite anime, manga, and more. Stay updated and explore the world of anime effortlessly! 🌟";
+        tokenElement.textContent = token;
+        extraElement.innerHTML =
+          "Copy the above url and send it to the bot so that our bot can have access to your <a href='https://anilist.co'><span class='blue'>AniList</span></a> notifications.";
       } else {
         titleElement.textContent = "AniList";
         descriptionElement.textContent =
           "Congratulations! 🎉 You've successfully connected with AniList. Dive into a world of anime and manga, explore new adventures, and uncover exciting stories. Start your journey now! 🌟";
+      }
+
+      function copyToken() {
+        const tokenText = document.getElementById("token").textContent;
+
+        const tempInput = document.createElement("textarea");
+        tempInput.value = tokenText;
+        document.body.appendChild(tempInput);
+
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+
+        alert("Token successfully copied!");
       }
     </script>
   </body>
