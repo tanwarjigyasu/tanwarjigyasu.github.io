@@ -61,18 +61,27 @@
       <h1>Authentication Successful!</h1>
       <p>You've successfully authenticated with <span id="title"></span>.</p>
       <p id="description"></p>
+      <p>You can close this page now.</p>
     </div>
 
     <script>
       const urlParams = new URLSearchParams(window.location.search);
-      const title = urlParams.get("title") ?? "AniList";
-      const description =
-        urlParams.get("description") ??
-        "Start exploring your favorite anime and manga!";
+      const type = urlParams.get("type");
       const titleElement = document.getElementById("title");
       const descriptionElement = document.getElementById("description");
-      titleElement.textContent = title;
-      descriptionElement.textContent = description;
+      if (type === "APP") {
+        titleElement.textContent = "AniList Unofficial";
+        descriptionElement.textContent =
+          "Congratulations on successfully authenticating with the Unofficial AniList App! 🎉 Dive into a world of endless anime and manga exploration. Discover, track, and indulge in your favorite series with ease. Welcome to a personalized AniList experience tailored just for you! 🌟";
+      } else if (type === "BOT") {
+        titleElement.textContent = "AniList Notifs";
+        descriptionElement.textContent =
+          "Congratulations! 🎉 You've successfully connected to AniList through our bot. Get ready to receive notifications about your favorite anime, manga, and more. Stay updated and explore the world of anime effortlessly! 🌟";
+      } else {
+        titleElement.textContent = "AniList";
+        descriptionElement.textContent =
+          "Congratulations! 🎉 You've successfully connected with AniList. Dive into a world of anime and manga, explore new adventures, and uncover exciting stories. Start your journey now! 🌟";
+      }
     </script>
   </body>
 </html>
